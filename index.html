@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolução Laboratorial Pós-Transplante Renal</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #111827;
+        }
+        
+        .header p {
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin-top: 8px;
+        }
+
+        .controls {
+            background: #fff;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .controls-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .toggle-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .toggle-btn:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+
+        .toggle-btn.active {
+            border-color: var(--color);
+            background: var(--bg);
+            color: var(--color);
+        }
+
+        .toggle-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active .toggle-dot {
+            background: var(--color);
+        }
+
+        .presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .preset-btn {
+            padding: 8px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover {
+            background: #f1f5f9;
+            color: #374151;
+        }
+        
+        .chart-box {
+            background: #fff;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .chart-wrapper {
+            height: 500px;
+            position: relative;
+        }
+        
+        .legend {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 2px solid #f3f4f6;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 24px 32px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-line {
+            width: 40px;
+            height: 4px;
+            border-radius: 2px;
+        }
+        
+        .legend-line-dashed {
+            width: 40px;
+            height: 3px;
+            background-size: 12px 3px;
+            background-repeat: repeat-x;
+        }
+        
+        .legend-box {
+            width: 32px;
+            height: 20px;
+            border-radius: 4px;
+            background: #fde68a;
+        }
+        
+        .legend-text {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .legend-unit {
+            font-weight: 400;
+            color: #9ca3af;
+        }
+        
+        .note {
+            text-align: center;
+            font-size: 0.875rem;
+            color: #9ca3af;
+            margin-top: 24px;
+        }
+
+        .custom-tooltip {
+            background: rgba(255, 255, 255, 0.97);
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            min-width: 200px;
+        }
+        
+        .tooltip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .tooltip-date {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+        
+        .tooltip-dialise {
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+        
+        .tooltip-label {
+            font-weight: 500;
+        }
+        
+        .tooltip-value {
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Evolução Laboratorial Pós-Transplante Renal</h1>
+            <p>14 a 27 de Novembro</p>
+        </div>
+
+        <div class="controls">
+            <div class="controls-title">Selecione os parâmetros para visualizar</div>
+            <div class="toggle-group">
+                <button class="toggle-btn active" data-key="ureia" style="--color: #2563EB; --bg: #eff6ff;" onclick="toggleDataset('ureia')">
+                    <span class="toggle-dot"></span>
+                    Ureia
+                </button>
+                <button class="toggle-btn active" data-key="creatinina" style="--color: #DC2626; --bg: #fef2f2;" onclick="toggleDataset('creatinina')">
+                    <span class="toggle-dot"></span>
+                    Creatinina
+                </button>
+                <button class="toggle-btn" data-key="na" style="--color: #059669; --bg: #ecfdf5;" onclick="toggleDataset('na')">
+                    <span class="toggle-dot"></span>
+                    Sódio
+                </button>
+                <button class="toggle-btn" data-key="k" style="--color: #7C3AED; --bg: #f5f3ff;" onclick="toggleDataset('k')">
+                    <span class="toggle-dot"></span>
+                    Potássio
+                </button>
+                <button class="toggle-btn" data-key="diurese" style="--color: #D97706; --bg: #fffbeb;" onclick="toggleDataset('diurese')">
+                    <span class="toggle-dot"></span>
+                    Diurese
+                </button>
+                <button class="toggle-btn" data-key="dreno" style="--color: #0891B2; --bg: #ecfeff;" onclick="toggleDataset('dreno')">
+                    <span class="toggle-dot"></span>
+                    Dreno
+                </button>
+            </div>
+
+            <div class="presets">
+                <button class="preset-btn" onclick="selectPreset('renal')">Função Renal</button>
+                <button class="preset-btn" onclick="selectPreset('eletrolitos')">Eletrólitos</button>
+                <button class="preset-btn" onclick="selectPreset('volumes')">Volumes</button>
+                <button class="preset-btn" onclick="selectPreset('todos')">Todos</button>
+                <button class="preset-btn" onclick="selectPreset('nenhum')">Limpar</button>
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <div class="chart-wrapper">
+                <canvas id="grafico"></canvas>
+            </div>
+            
+            <div class="legend" id="legend"></div>
+        </div>
+        
+        <p class="note">* Creatinina e Potássio multiplicados por 10 para melhor visualização na escala. Fundo amarelo = dias de hemodiálise.</p>
+    </div>
+
+    <script>
+        const dados = [
+            { data: '14/11 Pré',  ureia: 73,   creat: 4.1,  na: 134, k: 5.1, diurese: 560,  dreno: 0,    hd: false },
+            { data: '14/11 Pós',  ureia: null, creat: null, na: 120, k: 5.0, diurese: null, dreno: null, hd: false },
+            { data: '15/11',      ureia: 94,   creat: 4.9,  na: 130, k: 4.0, diurese: 20,   dreno: 155,  hd: false },
+            { data: '16/11',      ureia: 135,  creat: 5.8,  na: 128, k: 6.2, diurese: 9,    dreno: 175,  hd: true },
+            { data: '17/11',      ureia: 85,   creat: 4.1,  na: 131, k: 5.4, diurese: 50,   dreno: 40,   hd: true },
+            { data: '18/11',      ureia: 120,  creat: 5.4,  na: 124, k: 5.4, diurese: 75,   dreno: 50,   hd: true },
+            { data: '19/11',      ureia: 89,   creat: 3.9,  na: 128, k: 5.0, diurese: 80,   dreno: 40,   hd: false },
+            { data: '20/11',      ureia: 115,  creat: 4.9,  na: 124, k: 5.2, diurese: null, dreno: 50,   hd: true },
+            { data: '21/11',      ureia: 81,   creat: 3.7,  na: 126, k: 5.1, diurese: 150,  dreno: 60,   hd: false },
+            { data: '22/11',      ureia: 100,  creat: 4.3,  na: 124, k: 4.9, diurese: 100,  dreno: 400,  hd: true },
+            { data: '23/11',      ureia: 72,   creat: 3.6,  na: null, k: null, diurese: 255, dreno: 700, hd: false },
+            { data: '24/11',      ureia: null, creat: null, na: null, k: null, diurese: 270, dreno: 475, hd: false },
+            { data: '25/11',      ureia: 119,  creat: 5.3,  na: null, k: null, diurese: 400, dreno: 740, hd: true },
+            { data: '26/11',      ureia: 63,   creat: 3.4,  na: null, k: null, diurese: 400, dreno: 360, hd: false },
+            { data: '27/11',      ureia: 77,   creat: 3.8,  na: null, k: null, diurese: null, dreno: null, hd: false },
+        ];
+
+        const config = {
+            ureia: { 
+                label: 'Ureia', 
+                unit: 'mg/dL', 
+                color: '#2563EB', 
+                yAxis: 'y',
+                data: dados.map(d => d.ureia),
+                dashed: false
+            },
+            creatinina: { 
+                label: 'Creatinina', 
+                unit: 'mg/dL', 
+                color: '#DC2626', 
+                yAxis: 'y1',
+                data: dados.map(d => d.creat ? d.creat * 10 : null),
+                realData: dados.map(d => d.creat),
+                multiplier: 10,
+                dashed: false
+            },
+            na: { 
+                label: 'Sódio', 
+                unit: 'mEq/L', 
+                color: '#059669', 
+                yAxis: 'y1',
+                data: dados.map(d => d.na),
+                dashed: true
+            },
+            k: { 
+                label: 'Potássio', 
+                unit: 'mEq/L', 
+                color: '#7C3AED', 
+                yAxis: 'y1',
+                data: dados.map(d => d.k ? d.k * 10 : null),
+                realData: dados.map(d => d.k),
+                multiplier: 10,
+                dashed: true
+            },
+            diurese: { 
+                label: 'Diurese', 
+                unit: 'mL', 
+                color: '#D97706', 
+                yAxis: 'y',
+                data: dados.map(d => d.diurese),
+                dashed: false
+            },
+            dreno: { 
+                label: 'Dreno', 
+                unit: 'mL', 
+                color: '#0891B2', 
+                yAxis: 'y',
+                data: dados.map(d => d.dreno),
+                dashed: false
+            }
+        };
+
+        let activeDatasets = ['ureia', 'creatinina'];
+        let chart;
+
+        const hdBackgroundPlugin = {
+            id: 'hdBackground',
+            beforeDraw: (chart) => {
+                const ctx = chart.ctx;
+                const xAxis = chart.scales.x;
+                const yAxis = chart.scales.y;
+                
+                if (!yAxis) return;
+                
+                dados.forEach((d, index) => {
+                    if (d.hd) {
+                        const x = xAxis.getPixelForValue(index);
+                        const barWidth = xAxis.width / dados.length * 0.8;
+                        
+                        ctx.save();
+                        ctx.fillStyle = 'rgba(253, 230, 138, 0.5)';
+                        ctx.fillRect(x - barWidth/2, yAxis.top, barWidth, yAxis.bottom - yAxis.top);
+                        ctx.restore();
+                    }
+                });
+            }
+        };
+
+        const externalTooltipHandler = (context) => {
+            const { chart, tooltip } = context;
+            
+            let tooltipEl = document.getElementById('chartjs-tooltip');
+            
+            if (!tooltipEl) {
+                tooltipEl = document.createElement('div');
+                tooltipEl.id = 'chartjs-tooltip';
+                tooltipEl.innerHTML = '<div class="custom-tooltip"></div>';
+                document.body.appendChild(tooltipEl);
+            }
+            
+            if (tooltip.opacity === 0) {
+                tooltipEl.style.opacity = 0;
+                return;
+            }
+            
+            if (tooltip.body) {
+                const dataIndex = tooltip.dataPoints[0].dataIndex;
+                const dia = dados[dataIndex];
+                
+                let html = `
+                    <div class="tooltip-header">
+                        <span class="tooltip-date">${dia.data}</span>
+                        ${dia.hd ? '<span class="tooltip-dialise">DIÁLISE</span>' : ''}
+                    </div>
+                `;
+                
+                activeDatasets.forEach(key => {
+                    const cfg = config[key];
+                    let value;
+                    
+                    if (key === 'creatinina') value = dia.creat;
+                    else if (key === 'na') value = dia.na;
+                    else if (key === 'k') value = dia.k;
+                    else if (key === 'diurese') value = dia.diurese;
+                    else if (key === 'dreno') value = dia.dreno;
+                    else if (key === 'ureia') value = dia.ureia;
+                    
+                    if (value != null) {
+                        html += `<div class="tooltip-row">
+                            <span class="tooltip-label" style="color: ${cfg.color};">${cfg.label}:</span>
+                            <span class="tooltip-value">${value} ${cfg.unit}</span>
+                        </div>`;
+                    }
+                });
+                
+                tooltipEl.querySelector('.custom-tooltip').innerHTML = html;
+            }
+            
+            const position = chart.canvas.getBoundingClientRect();
+            
+            tooltipEl.style.opacity = 1;
+            tooltipEl.style.position = 'absolute';
+            tooltipEl.style.left = position.left + window.pageXOffset + tooltip.caretX + 'px';
+            tooltipEl.style.top = position.top + window.pageYOffset + tooltip.caretY - 10 + 'px';
+            tooltipEl.style.pointerEvents = 'none';
+            tooltipEl.style.transform = 'translate(-50%, -100%)';
+            tooltipEl.style.transition = 'all 0.1s ease';
+        };
+
+        function createDataset(key) {
+            const cfg = config[key];
+            return {
+                label: cfg.label,
+                data: cfg.data,
+                borderColor: cfg.color,
+                backgroundColor: cfg.color,
+                borderWidth: cfg.dashed ? 3 : 4,
+                borderDash: cfg.dashed ? [8, 4] : [],
+                pointRadius: cfg.dashed ? 5 : 6,
+                pointBackgroundColor: cfg.color,
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverRadius: cfg.dashed ? 8 : 9,
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: cfg.color,
+                pointHoverBorderWidth: 3,
+                tension: 0.1,
+                yAxisID: cfg.yAxis,
+                spanGaps: true
+            };
+        }
+
+        function updateLegend() {
+            const legendEl = document.getElementById('legend');
+            let html = '';
+            
+            activeDatasets.forEach(key => {
+                const cfg = config[key];
+                const lineStyle = cfg.dashed 
+                    ? `background-image: linear-gradient(90deg, ${cfg.color} 60%, transparent 60%);` 
+                    : `background: ${cfg.color};`;
+                const lineClass = cfg.dashed ? 'legend-line-dashed' : 'legend-line';
+                const multiplierText = cfg.multiplier ? ` ×${cfg.multiplier}` : '';
+                
+                html += `
+                    <div class="legend-item">
+                        <div class="${lineClass}" style="${lineStyle}"></div>
+                        <span class="legend-text">${cfg.label} <span class="legend-unit">(${cfg.unit}${multiplierText})</span></span>
+                    </div>
+                `;
+            });
+            
+            if (activeDatasets.length > 0) {
+                html += `
+                    <div class="legend-item">
+                        <div class="legend-box"></div>
+                        <span class="legend-text">Hemodiálise</span>
+                    </div>
+                `;
+            }
+            
+            legendEl.innerHTML = html;
+        }
+
+        function updateChart() {
+            if (activeDatasets.length === 0) {
+                chart.data.datasets = [];
+            } else {
+                chart.data.datasets = activeDatasets.map(key => createDataset(key));
+            }
+            
+            const needsLeftAxis = activeDatasets.some(k => config[k].yAxis === 'y');
+            const needsRightAxis = activeDatasets.some(k => config[k].yAxis === 'y1');
+            
+            chart.options.scales.y.display = needsLeftAxis;
+            chart.options.scales.y1.display = needsRightAxis;
+            
+            chart.update();
+            updateLegend();
+        }
+
+        function toggleDataset(key) {
+            const btn = document.querySelector(`[data-key="${key}"]`);
+            
+            if (activeDatasets.includes(key)) {
+                activeDatasets = activeDatasets.filter(k => k !== key);
+                btn.classList.remove('active');
+            } else {
+                activeDatasets.push(key);
+                btn.classList.add('active');
+            }
+            
+            updateChart();
+        }
+
+        function selectPreset(preset) {
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            
+            switch(preset) {
+                case 'renal':
+                    activeDatasets = ['ureia', 'creatinina'];
+                    break;
+                case 'eletrolitos':
+                    activeDatasets = ['na', 'k'];
+                    break;
+                case 'volumes':
+                    activeDatasets = ['diurese', 'dreno'];
+                    break;
+                case 'todos':
+                    activeDatasets = ['ureia', 'creatinina', 'na', 'k', 'diurese', 'dreno'];
+                    break;
+                case 'nenhum':
+                    activeDatasets = [];
+                    break;
+            }
+            
+            activeDatasets.forEach(key => {
+                document.querySelector(`[data-key="${key}"]`).classList.add('active');
+            });
+            
+            updateChart();
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('grafico').getContext('2d');
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dados.map(d => d.data),
+                    datasets: activeDatasets.map(key => createDataset(key))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false,
+                            external: externalTooltipHandler
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 13,
+                                    weight: '600'
+                                },
+                                color: '#374151'
+                            },
+                            grid: {
+                                color: '#E5E7EB'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            min: 0,
+                            max: 800,
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Ureia (mg/dL) · Volumes (mL)',
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                },
+                                color: '#3B82F6'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                },
+                                color: '#6B7280'
+                            },
+                            grid: {
+                                color: '#E5E7EB'
+                            },
+                            border: {
+                                color: '#3B82F6',
+                                width: 2
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            min: 0,
+                            max: 150,
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Creat (×10) · Na · K (×10)',
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                },
+                                color: '#DC2626'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                },
+                                color: '#6B7280'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            border: {
+                                color: '#DC2626',
+                                width: 2
+                            }
+                        }
+                    }
+                },
+                plugins: [hdBackgroundPlugin]
+            });
+            
+            updateLegend();
+        }
+
+        document.addEventListener('DOMContentLoaded', initChart);
+    </script>
+</body>
+</html>
